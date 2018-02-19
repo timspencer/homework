@@ -4,4 +4,88 @@
   tasks:
     - include: tasks/deps.yml
 
-    # your code goes here ...
+    - name: install runit package
+      yum:
+        # rpm takes care of making sure that the package was properly signed,
+        # else I might have downloaded it and done a SHA256 on it.
+        name: https://packagecloud.io/imeyer/runit/packages/el/6/runit-2.1.2-1.el6.x86_64.rpm/download.rpm
+        state: present
+    - name: create /opt
+      file:
+        path: /opt
+        state: directory
+    - name: unpack app in app homedir
+      unarchive:
+        src: application.zip
+        dest: /opt
+    - name: create application sv dir
+      file:
+        path: /etc/service/application
+        state: directory
+    - name: set up runit start script
+      copy:
+        src: /opt/application/run
+        dest: /etc/service/application
+        mode: 0755
+        remote_src: yes
+    - name: make sure that app is running
+      runit:
+        name: application
+        state: started
+
+    - name: install latest nginx
+      yum:
+        name: nginx
+        state: latest
+        update_cache: yes
+    - name: install nginx config
+      copy:
+        src: config/nginx.conf
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+        mode: 0644
+      notify: 
+      - reload nginx
+    - name: create key dir
+      file:
+        path: /etc/ssl/private
+        state: directory
+        owner: root
+        group: root
+        mode: 0700
+        recurse: yes
+    - name: install nginx cert
+      copy:
+        src: files/self-signed.crt
+        dest: /etc/ssl/certs/self-signed.crt
+        owner: root
+        group: root
+        mode: 0640
+      notify: 
+      - reload nginx
+    - name: install nginx key
+      copy:
+        src: files/self-signed.key
+        dest: /etc/ssl/private/self-signed.key
+        owner: root
+        group: root
+        mode: 0600
+      notify: 
+      - reload nginx
+    - name: create dhparam file
+      command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+      args:
+        creates: /etc/ssl/certs/dhparam.pem
+    - name: ensure nginx is running and restarts when host is rebooted
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+  handlers:
+    - name: reload nginx
+      become: true
+      service:
+        name: nginx
+        state: reloaded
+
