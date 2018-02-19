@@ -4,6 +4,7 @@
   tasks:
     - include: tasks/deps.yml
 
+    # get everything up to date and runit installed
     - name: upgrade all packages
       yum:
         name: '*'
@@ -25,6 +26,7 @@
         name: runit
         state: latest
 
+    # Get the app going!
     - name: create /opt
       file:
         path: /opt
@@ -48,6 +50,7 @@
         name: application
         state: started
 
+    # get nginx installed, configured, and running
     - name: install latest nginx
       yum:
         name: nginx
