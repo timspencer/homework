@@ -4,12 +4,27 @@
   tasks:
     - include: tasks/deps.yml
 
+    - name: upgrade all packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+    - name: install packagecloud repo
+      yum_repository:
+        name: imeyer_runit
+        description: imeyer_runit
+        baseurl: https://packagecloud.io/imeyer/runit/el/6/$basearch
+        repo_gpgcheck: yes
+        gpgcheck: no
+        gpgkey: https://packagecloud.io/imeyer/runit/gpgkey
+        sslverify: yes
+        sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+        metadata_expire: 300
     - name: install runit package
       yum:
-        # rpm takes care of making sure that the package was properly signed,
-        # else I might have downloaded it and done a SHA256 on it.
-        name: https://packagecloud.io/imeyer/runit/packages/el/6/runit-2.1.2-1.el6.x86_64.rpm/download.rpm
-        state: present
+        name: runit
+        state: latest
+
     - name: create /opt
       file:
         path: /opt
@@ -37,7 +52,6 @@
       yum:
         name: nginx
         state: latest
-        update_cache: yes
     - name: install nginx config
       copy:
         src: config/nginx.conf
@@ -82,6 +96,7 @@
         name: nginx
         state: started
         enabled: yes
+
   handlers:
     - name: reload nginx
       become: true
