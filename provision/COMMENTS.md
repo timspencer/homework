@@ -24,11 +24,17 @@ and lets us just focus on the app stuff that we want.
 I chose to upgrade all packages at the start, which is good for security,
 but slow.  If this were deployed in a real environment, we'd probably have
 a process to create an image with CI to use so that this step would be very
-short.
+short at deploy time.
 
 The packagecloud repo seems a bit sketchy, but hey, it's centos 6.8, and I
 guess this is where you get this stuff.  :-)  At least we have some gpg
-checking and so on for the repo.
+checking and so on for the repo.  Truthfully, I probably should be
+downloading the package directly and doing a SHA256 on it and comparing it
+with one that I set in the playbook.  The downside to this is that you
+don't get the latest and greatest code if there is a security fix down
+the road.  I prefer to try to get the latest packages from a repo that
+we have decided to trust instead of having to watch their repo for changes
+and having to update by hand.
 
 I would have set up logging for the app, but it appears as if the app
 redirects everything to /dev/null anyways, so to keep things simple, I did
